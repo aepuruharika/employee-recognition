@@ -23,10 +23,10 @@ public class Recognition {
     private Long id;
 
     @Column(nullable = false)
-    private Long senderId;
+    private String senderId;
 
     @Column(nullable = false)
-    private Long receiverId;
+    private String receiverId;
 
     @Column(nullable = false)
     private int points;

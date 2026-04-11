@@ -23,7 +23,9 @@ public class UserService {
 
     public UserResponseDto registerUser(UserRequestDto dto) {
         userRepository.findByEmail(dto.getEmail())
-                .ifPresent(u -> { throw new EmailAlreadyExistsException("Email already exists: " + dto.getEmail()); });
+                .ifPresent(u -> {
+                    throw new EmailAlreadyExistsException("Email already exists: " + dto.getEmail());
+                });
 
         User user = UserMapper.toEntity(dto);
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
@@ -41,8 +43,10 @@ public class UserService {
         User user = userRepository.findById(empId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with empId: " + empId));
 
-        if(dto.getBandLevel() != null) user.setBandLevel(dto.getBandLevel());
-        if(dto.getManagerId() != null) user.setManagerId(dto.getManagerId());
+        if (dto.getBandLevel() != null)
+            user.setBandLevel(dto.getBandLevel());
+        if (dto.getManagerId() != null)
+            user.setManagerId(dto.getManagerId());
 
         User updated = userRepository.save(user);
         return UserMapper.toDTO(updated);
@@ -50,6 +54,20 @@ public class UserService {
 
     public List<UserResponseDto> getUsersByBand(String bandLevel) {
         List<User> users = userRepository.findByBandLevel(bandLevel);
+        return users.stream().map(UserMapper::toDTO).collect(Collectors.toList());
+    }
+
+    public UserResponseDto login(String email, String password) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("Invalid password");
+        }
+        return UserMapper.toDTO(user);
+    }
+
+    public List<UserResponseDto> getAllUsers() {
+        List<User> users = userRepository.findAll();
         return users.stream().map(UserMapper::toDTO).collect(Collectors.toList());
     }
 }

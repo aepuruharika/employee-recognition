@@ -1,7 +1,6 @@
 package com.gl.app.dto;
 
 import lombok.*;
-import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -14,5 +13,5 @@ public class RecognitionDto {
     private String receiverId;
     private int points;
     private String message;
-    // private LocalDateTime createdAt;
+
 }

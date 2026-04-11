@@ -6,7 +6,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notifications")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -16,11 +17,13 @@ public class Notification {
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long id;
 
-        private Long userId;
+        private String empId;   // receiverId
 
         private String message;
 
-        private String type;
+        private String type; // RECOGNITION / REWARD
+
+        private boolean isRead;
 
         private LocalDateTime createdAt;
-    }
+}

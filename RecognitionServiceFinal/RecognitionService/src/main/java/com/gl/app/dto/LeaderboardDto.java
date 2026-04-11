@@ -2,14 +2,14 @@ package com.gl.app.dto;
 
 import lombok.*;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class LeaderboardDto {
 
-    private Long userId;
+    private String userId;
+    private String name;
     private Long totalPoints;
+    private int rank;
 }

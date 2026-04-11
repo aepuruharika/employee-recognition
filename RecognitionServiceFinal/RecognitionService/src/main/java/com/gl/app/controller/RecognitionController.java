@@ -1,50 +1,54 @@
 package com.gl.app.controller;
 
-import com.gl.app.dto.LeaderboardDto;
-import com.gl.app.dto.RecognitionDto;
+import com.gl.app.dto.*;
 import com.gl.app.entity.Recognition;
-import com.gl.app.exception.RecognitionServiceException;
 import com.gl.app.service.RecognitionService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/recognition")
+@RequestMapping("/api/recognitions")
+@CrossOrigin
 public class RecognitionController {
 
     @Autowired
     private RecognitionService service;
 
-    @PostMapping("/give")
-    public ResponseEntity<Recognition> giveRecognition(@RequestBody RecognitionDto rec) throws RecognitionServiceException {
-        return ResponseEntity.ok(service.giveRecognition(rec));
+    @PostMapping
+    public Recognition giveRecognition(@RequestBody RecognitionDto dto) throws Exception {
+        return service.giveRecognition(dto);
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<RecognitionDto>> getRecognitionsByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(service.getRecognitionsByUser(userId));
+    public List<RecognitionDto> getByUser(@PathVariable String userId) {
+        return service.getRecognitionsByUser(userId);
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<List<RecognitionDto>> getAllRecognitions() {
-        return ResponseEntity.ok(service.getAllRecognitions());
+    @GetMapping
+    public List<RecognitionDto> getAll() {
+        return service.getAllRecognitions();
     }
 
     @GetMapping("/leaderboard")
-    public ResponseEntity<List<LeaderboardDto>> getLeaderboard() {
-        return ResponseEntity.ok(service.getLeaderboard());
+    public List<LeaderboardDto> leaderboard() {
+        return service.getLeaderboard();
+    }
+
+    @GetMapping("/leaderboard/{band}")
+    public List<LeaderboardDto> leaderboardByBand(@PathVariable String band) throws Exception {
+        return service.getLeaderboardByBandLevel(band);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteRecognition(@PathVariable Long id) {
+    public String delete(@PathVariable Long id) {
         service.deleteRecognition(id);
+        return "Deleted successfully";
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<RecognitionDto> updateRecognition(Long id, @RequestBody RecognitionDto rec) throws RecognitionServiceException {
-        return ResponseEntity.ok(service.updateRecognition(id,rec));
+    @PutMapping("/{id}")
+    public RecognitionDto update(@PathVariable Long id, @RequestBody RecognitionDto dto) throws Exception {
+        return service.updateRecognition(id, dto);
     }
 }

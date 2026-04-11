@@ -2,18 +2,15 @@ package com.gl.app.dto;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
-
-import lombok.*;
-
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
+@Data
 @Builder
 public class NotificationDto {
-
     private String empId;
     private String message;
     private String type;
+    //private LocalDateTime createdAt;
 }

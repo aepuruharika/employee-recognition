@@ -1,5 +1,6 @@
 package com.gl.app.service;
 
+
 import com.gl.app.dto.NotificationDto;
 import com.gl.app.entity.Notification;
 import com.gl.app.repository.NotificationRepository;
@@ -13,40 +14,38 @@ import java.util.List;
 public class NotificationService {
 
     @Autowired
-    private NotificationRepository notificationRepository;
+    private NotificationRepository repo;
 
-    public NotificationDto sendNotification(NotificationDto dto) {
+    // 🔥 Save Notification
+    public Notification sendNotification(NotificationDto dto) {
 
         Notification notification = Notification.builder()
-                .userId(dto.getUserId())
+                .empId(dto.getEmpId())
                 .message(dto.getMessage())
                 .type(dto.getType())
+                .isRead(false)
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        Notification saved = notificationRepository.save(notification);
-
-        return NotificationDto.builder()
-                .userId(saved.getUserId())
-                .message(saved.getMessage())
-                .type(saved.getType())
-                //.createdAt(saved.getCreatedAt())
-                .build();
+        return repo.save(notification);
     }
 
-    public List<NotificationDto> getUserNotifications(Long userId) {
-        return notificationRepository.findByUserId(userId)
-                .stream()
-                .map(n -> NotificationDto.builder()
-                        .userId(n.getUserId())
-                        .message(n.getMessage())
-                        .type(n.getType())
-                        //.createdAt(n.getCreatedAt())
-                        .build())
-                .toList();
+    // 📥 Get all notifications
+    public List<Notification> getUserNotifications(String empId) {
+        return repo.findByEmpIdOrderByCreatedAtDesc(empId);
     }
 
-    public void deleteNotification(Long id) {
-        notificationRepository.deleteById(id);
+    // 📥 Get unread notifications
+    public List<Notification> getUnreadNotifications(String empId) {
+        return repo.findByEmpIdAndIsReadFalse(empId);
+    }
+
+    // ✅ Mark as read
+    public void markAsRead(Long id) {
+        Notification notification = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Notification not found"));
+
+        notification.setRead(true);
+        repo.save(notification);
     }
 }

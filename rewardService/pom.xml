@@ -15,7 +15,7 @@
     </parent>
 
     <groupId>com.gl.app</groupId>
-    <artifactId>RecognitionService</artifactId>
+    <artifactId>RewardService</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>RecognitionService</name>
     <description>Employee Recognition Service</description>
