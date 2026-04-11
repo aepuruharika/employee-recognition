@@ -30,4 +30,10 @@ public class NotificationController {
         service.deleteNotification(id);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/send")
+    public ResponseEntity<Void> send(@RequestBody NotificationDto dto) {
+        service.sendNotification(dto);
+        return ResponseEntity.ok().build();
+    }
 }

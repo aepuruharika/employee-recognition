@@ -1,15 +1,14 @@
 package com.gl.rewardservice.Dto;
 
 import lombok.*;
-import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RewardDto {
+public class RewardRequestDto {
     private String userId;
-    private String badgeName;
     private int milestonePoints;
+    private String badgeName;
 
 }

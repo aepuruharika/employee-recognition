@@ -1,49 +1,53 @@
 package com.gl.rewardservice.controller;
 
-import com.gl.rewardservice.Dto.RewardDto;
+import com.gl.rewardservice.Dto.RewardRequestDto;
 import com.gl.rewardservice.entity.Reward;
 import com.gl.rewardservice.service.RewardService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/rewards")
 @RequiredArgsConstructor
 public class RewardController {
 
-    private final RewardService rewardService;
+    @Autowired
+    private RewardService service;
 
     @PostMapping("/assign")
-    public ResponseEntity<RewardDto> assignReward(@RequestBody RewardDto dto) {
-        Reward reward = rewardService.assignReward(dto);
-        RewardDto response = RewardDto.builder()
-                .userId(reward.getUserId())
-                .badgeName(reward.getBadgeName())
-                .milestonePoints(reward.getMilestonePoints())
-                .build();
+    public ResponseEntity<RewardRequestDto> assign(@RequestBody RewardRequestDto dto) {
+
+        RewardRequestDto response =
+                service.assignReward(dto.getUserId(), dto.getMilestonePoints());
+
+        if (response == null) {
+            return ResponseEntity.noContent().build();
+        }
+
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<RewardDto>> getRewardsByUser(@PathVariable String userId) {
-        return ResponseEntity.ok(rewardService.getRewardsByUser(userId));
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<RewardRequestDto> getUser(@PathVariable String userId) {
+        return ResponseEntity.ok(service.getByUser(userId));
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<List<RewardDto>> getAllRewards() {
-        return ResponseEntity.ok(rewardService.getAllRewards());
+
+    @GetMapping("/get-all")
+    public ResponseEntity<List<RewardRequestDto>> getAll() {
+        return ResponseEntity.ok(service.getAll());
     }
+
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> deleteReward(@PathVariable Long id) {
-        rewardService.deleteReward(id);
-        return ResponseEntity.ok(Map.of(
-                "message", "Reward deleted successfully",
-                "deletedId", id
-        ));
+    public ResponseEntity<String> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.ok("Deleted successfully");
     }
 }

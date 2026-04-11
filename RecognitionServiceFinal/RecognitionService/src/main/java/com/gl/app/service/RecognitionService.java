@@ -1,15 +1,17 @@
 package com.gl.app.service;
 
-import com.gl.app.dto.LeaderboardDto;
-import com.gl.app.dto.RecognitionDto;
+import com.gl.app.client.NotificationClient;
+import com.gl.app.client.UserClient;
+import com.gl.app.dto.*;
 import com.gl.app.entity.Recognition;
+import com.gl.app.exception.BandLevelNotFoundException;
 import com.gl.app.exception.RecognitionServiceException;
 import com.gl.app.repository.RecognitionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class RecognitionService {
@@ -17,12 +19,15 @@ public class RecognitionService {
     @Autowired
     private RecognitionRepository repo;
 
+    @Autowired
+    private UserClient userClient;
+
+    @Autowired
+    private NotificationClient notificationClient;
+
+    // 🔥 GIVE RECOGNITION
     public Recognition giveRecognition(RecognitionDto rec) throws RecognitionServiceException {
-        Recognition recognition =  new Recognition();
-        recognition.setSenderId(rec.getSenderId());
-        recognition.setReceiverId(rec.getReceiverId());
-        recognition.setPoints(rec.getPoints());
-        recognition.setMessage(rec.getMessage());
+
         if (rec.getSenderId().equals(rec.getReceiverId())) {
             throw new RecognitionServiceException("User cannot recognize themselves");
         }
@@ -31,48 +36,128 @@ public class RecognitionService {
             throw new RecognitionServiceException("Points must be greater than zero");
         }
 
-        recognition.setCreatedAt(LocalDateTime.now());
+        Recognition recognition = Recognition.builder()
+                .senderId(rec.getSenderId())
+                .receiverId(rec.getReceiverId())
+                .points(rec.getPoints())
+                .message(rec.getMessage())
+                .createdAt(LocalDateTime.now())
+                .build();
 
-        return repo.save(recognition);
+        Recognition saved = repo.save(recognition);
+
+        // 🔥 Fetch sender name
+        UserResponseDto sender = userClient.getUserById(rec.getSenderId());
+        String senderName = (sender != null) ? sender.getName() : "Someone";
+
+        // 🔥 Build notification
+        String message = "🎉 You got " + rec.getPoints() + " points from " + senderName;
+
+        NotificationDto notification = NotificationDto.builder()
+                .empId(rec.getReceiverId())
+                .message(message)
+                .type("RECOGNITION")
+                .build();
+
+        // 🔥 Send notification
+        notificationClient.sendNotification(notification);
+
+        return saved;
     }
 
-    public List<RecognitionDto> getRecognitionsByUser(Long userId) {
-        List<Recognition> recognitions = repo.findByReceiverId(userId);
-
-        return recognitions.stream()
-                .map(rec -> RecognitionDto.builder()
-                        .senderId(rec.getSenderId())
-                        .receiverId(rec.getReceiverId())
-                        .points(rec.getPoints())
-                        .message(rec.getMessage())
-                        //.createdAt(rec.getCreatedAt())
+    // 📥 Get by user
+    public List<RecognitionDto> getRecognitionsByUser(String userId) {
+        return repo.findByReceiverId(userId).stream()
+                .map(r -> RecognitionDto.builder()
+                        .senderId(r.getSenderId())
+                        .receiverId(r.getReceiverId())
+                        .points(r.getPoints())
+                        .message(r.getMessage())
                         .build())
                 .toList();
     }
 
+    // 📥 Get all
     public List<RecognitionDto> getAllRecognitions() {
-        List<Recognition> recognitions = repo.findAll();
-
-        return recognitions.stream()
-                .map(rec -> RecognitionDto.builder()
-                        .senderId(rec.getSenderId())
-                        .receiverId(rec.getReceiverId())
-                        .points(rec.getPoints())
-                        .message(rec.getMessage())
-                        //.createdAt(rec.getCreatedAt())
+        return repo.findAll().stream()
+                .map(r -> RecognitionDto.builder()
+                        .senderId(r.getSenderId())
+                        .receiverId(r.getReceiverId())
+                        .points(r.getPoints())
+                        .message(r.getMessage())
                         .build())
                 .toList();
     }
 
+    // 🏆 Leaderboard
     public List<LeaderboardDto> getLeaderboard() {
-        return repo.getLeaderboard();
+
+        List<Object[]> results = repo.getLeaderboard();
+        List<LeaderboardDto> list = new ArrayList<>();
+        int rank = 1;
+
+        for (Object[] row : results) {
+            String userId = String.valueOf(row[0]);
+            Long totalPoints = ((Number) row[1]).longValue();
+
+            UserResponseDto user = userClient.getUserById(userId);
+
+            LeaderboardDto dto = new LeaderboardDto(
+                    userId,
+                    user.getName(),
+                    totalPoints,
+                    rank++
+            );
+
+            list.add(dto);
+        }
+
+        return list;
     }
 
+    // 🎯 Filter by Band
+    public List<LeaderboardDto> getLeaderboardByBandLevel(String bandLevel)
+            throws BandLevelNotFoundException {
+
+        List<Object[]> results = repo.getLeaderboard();
+        List<LeaderboardDto> list = new ArrayList<>();
+
+        for (Object[] row : results) {
+
+            String userId = String.valueOf(row[0]);
+            Long points = ((Number) row[1]).longValue();
+
+            UserResponseDto user = userClient.getUserById(userId);
+
+            if (user.getBandLevel() != null &&
+                    user.getBandLevel().equalsIgnoreCase(bandLevel)) {
+
+                list.add(new LeaderboardDto(userId, user.getName(), points, 0));
+            }
+        }
+
+        if (list.isEmpty()) {
+            throw new BandLevelNotFoundException("No users found for band: " + bandLevel);
+        }
+
+        list.sort((a, b) -> b.getTotalPoints().compareTo(a.getTotalPoints()));
+
+        int rank = 1;
+        for (LeaderboardDto dto : list) {
+            dto.setRank(rank++);
+        }
+
+        return list;
+    }
+
+    // ❌ Delete
     public void deleteRecognition(Long id) {
         repo.deleteById(id);
     }
 
-    public RecognitionDto updateRecognition(Long id, RecognitionDto dto) throws RecognitionServiceException {
+    // ✏️ Update
+    public RecognitionDto updateRecognition(Long id, RecognitionDto dto)
+            throws RecognitionServiceException {
 
         Recognition rec = repo.findById(id)
                 .orElseThrow(() -> new RecognitionServiceException("Recognition not found"));
@@ -83,12 +168,10 @@ public class RecognitionService {
         Recognition updated = repo.save(rec);
 
         return RecognitionDto.builder()
-                //.id(updated.getId())
                 .senderId(updated.getSenderId())
                 .receiverId(updated.getReceiverId())
                 .points(updated.getPoints())
                 .message(updated.getMessage())
-                //.createdAt(updated.getCreatedAt())
                 .build();
     }
 }

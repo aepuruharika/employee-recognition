@@ -5,7 +5,9 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "rewards")
+@Table(name = "rewards", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "user_id")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,7 +16,7 @@ public class Reward {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long rewardId;
+    private Long id;
 
     @Column(nullable = false)
     private String userId;

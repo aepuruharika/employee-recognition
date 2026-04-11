@@ -1,12 +1,13 @@
 package com.gl.rewardservice.service;
 
-import com.gl.rewardservice.Dto.RewardDto;
+import com.gl.rewardservice.Dto.NotificationDto;
+import com.gl.rewardservice.Dto.RewardRequestDto;
+import com.gl.rewardservice.client.NotificationClient;
 import com.gl.rewardservice.entity.Reward;
 import com.gl.rewardservice.repository.RewardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,42 +17,95 @@ public class RewardService {
     @Autowired
     private RewardRepository repo;
 
-    public Reward assignReward(RewardDto dto) {
-        if (repo.existsByUserIdAndMilestonePoints(dto.getUserId(), dto.getMilestonePoints())) {
-            throw new RuntimeException("Reward already assigned for this milestone");
+    @Autowired
+    private NotificationClient notificationClient;
+
+    private String getBadge(int points) {
+
+        if (points >= 1500) return "GOLD";
+        if (points >= 1000) return "SILVER";
+        if (points >= 500) return "BRONZE";
+
+        return null;
+    }
+
+    // 🚀 Assign or update reward (ONE USER = ONE RECORD)
+    public RewardRequestDto assignReward(String userId, int points) {
+
+        String badge = getBadge(points);
+
+        if (badge == null) {
+            return null;
         }
 
-        Reward reward = Reward.builder()
-                .userId(dto.getUserId())
-                .badgeName(dto.getBadgeName())
-                .milestonePoints(dto.getMilestonePoints())
-                .awardedDate(LocalDateTime.now())
+        // 🔥 fetch existing reward first
+        Reward reward = repo.findByUserId(userId)
+                .orElse(null);
+
+        // 🔥 store old badge before update
+        String oldBadge = (reward != null) ? reward.getBadgeName() : null;
+
+        // 🔥 if new user, create object
+        if (reward == null) {
+            reward = new Reward();
+            reward.setUserId(userId);
+        }
+
+        // 🔥 update values
+        reward.setBadgeName(badge);
+        reward.setMilestonePoints(points);
+        reward.setAwardedDate(LocalDateTime.now());
+
+        Reward saved = repo.save(reward);
+
+        // 🔥 check if badge changed
+        boolean isNewBadge = (oldBadge == null) || !oldBadge.equals(badge);
+
+        // 🚨 send notification only when badge changes
+        if (isNewBadge) {
+
+            NotificationDto notification = NotificationDto.builder()
+                    .empId(userId)
+                    .type("BADGE")
+                    .message("🎉 Congrats! You earned " + badge + " badge")
+                    .build();
+
+            notificationClient.sendNotification(notification);
+        }
+
+        return RewardRequestDto.builder()
+                .userId(saved.getUserId())
+                .milestonePoints(saved.getMilestonePoints())
                 .build();
-
-        return repo.save(reward);
     }
 
-    public List<RewardDto> getRewardsByUser(String userId) {
-        return repo.findByUserId(userId).stream()
-                .map(r -> RewardDto.builder()
+    // 📌 Get reward by user
+    public RewardRequestDto getByUser(String userId) {
+
+        return repo.findByUserId(userId)
+                .map(r -> RewardRequestDto.builder()
                         .userId(r.getUserId())
-                        .badgeName(r.getBadgeName())
                         .milestonePoints(r.getMilestonePoints())
+                        .badgeName(r.getBadgeName())
+                        .build())
+                .orElse(null);
+    }
+
+    // 📌 Get all rewards
+    public List<RewardRequestDto> getAll() {
+
+        return repo.findAll()
+                .stream()
+                .map(r -> RewardRequestDto.builder()
+                        .userId(r.getUserId())
+                        .milestonePoints(r.getMilestonePoints())
+                        .badgeName(r.getBadgeName())
                         .build())
                 .toList();
     }
 
-    public List<RewardDto> getAllRewards() {
-        return repo.findAll().stream()
-                .map(r -> RewardDto.builder()
-                        .userId(r.getUserId())
-                        .badgeName(r.getBadgeName())
-                        .milestonePoints(r.getMilestonePoints())
-                        .build())
-                .toList();
-    }
-
-    public void deleteReward(Long id) {
+    // ❌ Delete reward
+    public void delete(Long id) {
         repo.deleteById(id);
     }
 }

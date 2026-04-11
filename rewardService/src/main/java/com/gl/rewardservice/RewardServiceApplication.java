@@ -9,16 +9,17 @@ import org.springframework.data.repository.cdi.Eager;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
-@EnableDiscoveryClient
 @EnableFeignClients
+@EnableDiscoveryClient
 public class RewardServiceApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(RewardServiceApplication.class, args);
-    }
-    @Bean
-    public RestTemplate restTemplate(){
-        return new RestTemplate();
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(RewardServiceApplication.class, args);
+	}
+
+	@Bean
+	public RestTemplate restTemplate(){
+		return new RestTemplate();
+	}
 
 }
