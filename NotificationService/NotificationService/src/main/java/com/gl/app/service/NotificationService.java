@@ -34,7 +34,7 @@ public class NotificationService {
                 .build();
     }
 
-    public List<NotificationDto> getUserNotifications(Long userId) {
+    public List<NotificationDto> getUserNotifications(String userId) {
         return notificationRepository.findByUserId(userId)
                 .stream()
                 .map(n -> NotificationDto.builder()

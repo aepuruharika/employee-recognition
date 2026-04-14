@@ -29,7 +29,6 @@ public class RewardService {
         return null;
     }
 
-    // 🚀 Assign or update reward (ONE USER = ONE RECORD)
     public RewardRequestDto assignReward(String userId, int points) {
 
         String badge = getBadge(points);
@@ -38,30 +37,29 @@ public class RewardService {
             return null;
         }
 
-        // 🔥 fetch existing reward first
         Reward reward = repo.findByUserId(userId)
                 .orElse(null);
 
-        // 🔥 store old badge before update
+
         String oldBadge = (reward != null) ? reward.getBadgeName() : null;
 
-        // 🔥 if new user, create object
+
         if (reward == null) {
             reward = new Reward();
             reward.setUserId(userId);
         }
 
-        // 🔥 update values
+
         reward.setBadgeName(badge);
         reward.setMilestonePoints(points);
         reward.setAwardedDate(LocalDateTime.now());
 
         Reward saved = repo.save(reward);
 
-        // 🔥 check if badge changed
+
         boolean isNewBadge = (oldBadge == null) || !oldBadge.equals(badge);
 
-        // 🚨 send notification only when badge changes
+
         if (isNewBadge) {
 
             NotificationDto notification = NotificationDto.builder()
@@ -79,7 +77,7 @@ public class RewardService {
                 .build();
     }
 
-    // 📌 Get reward by user
+
     public RewardRequestDto getByUser(String userId) {
 
         return repo.findByUserId(userId)
@@ -91,7 +89,7 @@ public class RewardService {
                 .orElse(null);
     }
 
-    // 📌 Get all rewards
+
     public List<RewardRequestDto> getAll() {
 
         return repo.findAll()
@@ -104,8 +102,12 @@ public class RewardService {
                 .toList();
     }
 
-    // ❌ Delete reward
+
     public void delete(Long id) {
         repo.deleteById(id);
+    }
+
+    public void deleteByUserId(String userId) {
+        repo.deleteByUserId(userId);
     }
 }

@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/rewards")
+@RequestMapping("/api/rewards")
 @RequiredArgsConstructor
 public class RewardController {
 
@@ -48,6 +48,12 @@ public class RewardController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> delete(@PathVariable Long id) {
         service.delete(id);
+        return ResponseEntity.ok("Deleted successfully");
+    }
+
+    @DeleteMapping("byUserId/{userId}")
+    public ResponseEntity<String> deleteByUserId(@PathVariable String userId) {
+        service.deleteByUserId(userId);
         return ResponseEntity.ok("Deleted successfully");
     }
 }

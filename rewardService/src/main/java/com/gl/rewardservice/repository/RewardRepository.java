@@ -12,6 +12,8 @@ public interface RewardRepository extends JpaRepository<Reward, Long> {
     Optional<Reward> findByUserId(String userId);
     boolean existsByUserIdAndMilestonePoints(String userId, int milestonePoints);
 
+    void deleteByUserId(String userId);
+
 
 }
 

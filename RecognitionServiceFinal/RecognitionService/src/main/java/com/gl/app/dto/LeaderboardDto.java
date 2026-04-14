@@ -10,6 +10,13 @@ import lombok.*;
 @Setter
 public class LeaderboardDto {
 
-    private Long userId;
+    private String userId;
     private Long totalPoints;
+    private int rank;
+    private String userName;
+    public LeaderboardDto(int rank, String userName, Long totalPoints) {
+        this.totalPoints = totalPoints;
+        this.rank = rank;
+        this.userName = userName;
+    }
 }

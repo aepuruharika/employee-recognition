@@ -9,31 +9,31 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/notifications")
+@RequestMapping("/api/notification")
 public class NotificationController {
 
     @Autowired
     private NotificationService service;
 
     @PostMapping("/send")
-    public ResponseEntity<NotificationDto> send(@RequestBody NotificationDto dto) {
+    public ResponseEntity<NotificationDto> sendNotification(@RequestBody NotificationDto dto) {
         return ResponseEntity.ok(service.sendNotification(dto));
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<NotificationDto>> getUserNotifications(@PathVariable Long userId) {
+    public ResponseEntity<List<NotificationDto>> getUserNotifications(@PathVariable String userId) {
         return ResponseEntity.ok(service.getUserNotifications(userId));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity deleteNotification(Long id) {
+    public ResponseEntity<String> deleteNotification(Long id) {
         service.deleteNotification(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Notification deleted");
     }
 
-    @PostMapping("/send")
-    public ResponseEntity<Void> send(@RequestBody NotificationDto dto) {
-        service.sendNotification(dto);
-        return ResponseEntity.ok().build();
-    }
+//    @PostMapping("/send")
+//    public ResponseEntity<Void> send(@RequestBody NotificationDto dto) {
+//        service.sendNotification(dto);
+//        return ResponseEntity.ok().build();
+//    }
 }

@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class RecognitionDto {
-    private Long senderId;
-    private Long receiverId;
+    private String  senderId;
+    private String receiverId;
     private int points;
     private String message;
     //private LocalDateTime createdAt;

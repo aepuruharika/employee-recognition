@@ -9,12 +9,12 @@ import java.util.List;
 
 public interface RecognitionRepository extends JpaRepository<Recognition, Long> {
 
-    List<Recognition> findByReceiverId(Long receiverId);
+    List<Recognition> findByReceiverId(String receiverId);
 
     @Query("SELECT r.receiverId, SUM(r.points) " +
             "FROM Recognition r GROUP BY r.receiverId ORDER BY SUM(r.points) DESC")
     List<Object[]> getLeaderboard();
 
     @Query("SELECT SUM(r.points) FROM Recognition r WHERE r.receiverId = :receiverId")
-    Integer getTotalPointsByReceiver(@Param("receiverId") Long receiverId);
+    Integer getTotalPointsByReceiver(@Param("receiverId") String receiverId);
 }

@@ -3,6 +3,7 @@ package com.gl.app.controller;
 import com.gl.app.dto.LeaderboardDto;
 import com.gl.app.dto.RecognitionDto;
 import com.gl.app.entity.Recognition;
+import com.gl.app.exception.BandLevelNotFoundException;
 import com.gl.app.exception.RecognitionServiceException;
 import com.gl.app.service.RecognitionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,7 @@ public class RecognitionController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<RecognitionDto>> getRecognitionsByUser(@PathVariable Long userId) {
+    public ResponseEntity<List<RecognitionDto>> getRecognitionsByUser(@PathVariable String userId) {
         return ResponseEntity.ok(service.getRecognitionsByUser(userId));
     }
 
@@ -37,6 +38,12 @@ public class RecognitionController {
     public ResponseEntity<List<LeaderboardDto>> getLeaderboard() {
         return ResponseEntity.ok(service.getLeaderboard());
     }
+
+    @GetMapping("/leaderboard/{band}")
+    public ResponseEntity<List<LeaderboardDto>> getLeaderboardByBand(@PathVariable String band) throws BandLevelNotFoundException {
+        return ResponseEntity.ok(service.getLeaderboardByBandLevel(band));
+    }
+
 
     @DeleteMapping("/{id}")
     public void deleteRecognition(@PathVariable Long id) {
